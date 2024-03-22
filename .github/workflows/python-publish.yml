@@ -13,7 +13,6 @@ on:
   workflow_dispatch:
     tags:
       - "v*"
-
   # 自动触发
   push:
     tags:
