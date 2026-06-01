@@ -2,7 +2,7 @@
 
 **English** | [中文](README.zh-CN.md)
 
-A web-based terminal sharing tool. Built with FastAPI and xterm.js, featuring authentication, splittable multi-pane terminals, a toolbar, and in-browser configuration management.
+A web-based terminal sharing tool. Run it directly on the host machine to expose your local shell in the browser. Built with FastAPI and xterm.js, featuring authentication, splittable multi-pane terminals, a toolbar, and in-browser configuration management.
 
 > **Security notice**: A web terminal is equivalent to remote shell access. Use a strong password, deploy only on trusted networks, and put HTTPS reverse proxy in front for production.
 
@@ -13,7 +13,6 @@ A web-based terminal sharing tool. Built with FastAPI and xterm.js, featuring au
 - Toolbar: new, split, clear, copy/paste, reconnect, font size, theme toggle
 - CLI initialization and config management (`pyttyd init` / `pyttyd config`)
 - Web settings panel with save and one-click server restart
-- Docker / Docker Compose deployment
 - PTY window resize sync
 
 ## Quick Start
@@ -41,32 +40,7 @@ Password    : xxxxx
 
 Open `http://<host>:8221` in your browser and sign in.
 
-### Docker Compose
-
-```bash
-git clone https://github.com/zhanglaiya/pyttyd.git
-cd pyttyd
-
-docker compose up -d --build
-```
-
-On first start, `pyttyd init` runs automatically. To view generated credentials:
-
-```bash
-docker compose logs pyttyd
-# or exec into the container
-docker compose exec pyttyd pyttyd config show
-```
-
-Port `8221` is mapped by default. Override with an environment variable:
-
-```bash
-PYTTYD_PORT=9000 docker compose up -d
-```
-
-### Mount host directories (optional)
-
-To access host files from inside the container, uncomment the `$HOME` volume in `docker-compose.yml` and set `user: "${UID}:${GID}"`.
+> Pyttyd is meant to run on the **host OS** (pip install or `pip install -e .`). It shares the machine's real shell, home directory, and environment — not an isolated container.
 
 ## CLI
 
@@ -125,7 +99,7 @@ After login, the toolbar provides:
 1. **Reverse proxy + HTTPS**: Terminate TLS with Nginx or Caddy to avoid sending passwords and terminal data in plain text.
 2. **Restrict access**: Allow only trusted IPs in your firewall; do not expose the service directly to the public internet.
 3. **Strong passwords**: Rotate credentials regularly with `pyttyd config reset-password`.
-4. **Process supervision**: Use systemd or Docker `restart: unless-stopped` to keep the service running.
+4. **Process supervision**: Use systemd to keep the service running on boot.
 
 ### systemd example
 

@@ -176,11 +176,12 @@ async def websocket_endpoint(
         await websocket.close(code=4401, reason="Unauthorized")
         return
 
+    await websocket.accept()
+
     if _active_sessions >= cfg.max_terminals:
-        await websocket.close(code=4429, reason="Too many terminals")
+        await websocket.close(code=4429, reason=f"Too many terminals (max {cfg.max_terminals})")
         return
 
-    await websocket.accept()
     _active_sessions += 1
     try:
         async with PTY(websocket, cfg) as pty:

@@ -2,7 +2,7 @@
 
 [English](README.md) | **中文**
 
-在浏览器中共享终端的 Web 工具。基于 FastAPI + xterm.js，支持登录认证、可拆分多终端、工具栏与在线配置管理。
+在浏览器中共享**本机**终端的 Web 工具。直接在物理机/服务器上运行，暴露真实的 Shell 与环境。基于 FastAPI + xterm.js，支持登录认证、可拆分多终端、工具栏与在线配置管理。
 
 > **安全提示**：Web 终端等同于远程 Shell 访问，请务必设置强密码，仅在可信网络中使用，生产环境建议配合 HTTPS 反向代理。
 
@@ -13,7 +13,6 @@
 - 终端工具栏：新建、拆分、清屏、复制/粘贴、重连、字体调节、主题切换
 - 命令行初始化与配置管理（`pyttyd init` / `pyttyd config`）
 - Web 端设置面板，支持保存配置与一键重启服务
-- Docker / Docker Compose 一键部署
 - PTY 窗口尺寸同步（resize）
 
 ## 快速开始
@@ -41,32 +40,7 @@ Password    : xxxxx
 
 浏览器访问 `http://<host>:8221` 登录即可。
 
-### Docker Compose
-
-```bash
-git clone https://github.com/zhanglaiya/pyttyd.git
-cd pyttyd
-
-docker compose up -d --build
-```
-
-首次启动会自动执行 `pyttyd init`，查看生成的账号：
-
-```bash
-docker compose logs pyttyd
-# 或进入容器查看
-docker compose exec pyttyd pyttyd config show
-```
-
-默认映射端口 `8221`，可通过环境变量修改：
-
-```bash
-PYTTYD_PORT=9000 docker compose up -d
-```
-
-### 挂载主机目录（可选）
-
-若需要在容器内访问主机文件，编辑 `docker-compose.yml` 取消 `$HOME` 挂载注释，并设置 `user: "${UID}:${GID}"`。
+> Pyttyd 设计为在**宿主机**上直接运行（pip 安装或源码安装），共享本机真实的 Shell、主目录与环境，而非隔离的容器环境。
 
 ## 命令行
 
@@ -125,7 +99,7 @@ pyttyd
 1. **反向代理 + HTTPS**：使用 Nginx/Caddy 终止 TLS，避免明文传输密码与终端数据。
 2. **限制访问**：防火墙仅放行可信 IP；不要将服务直接暴露到公网。
 3. **强密码**：使用 `pyttyd config reset-password` 定期轮换。
-4. **进程管理**：配合 systemd 或 Docker `restart: unless-stopped` 保活。
+4. **进程管理**：配合 systemd 在开机时自动启动、异常退出后重启。
 
 ### systemd 示例
 

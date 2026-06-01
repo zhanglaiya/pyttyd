@@ -8,6 +8,7 @@
     panes: new Map(),
     fontSize: 14,
     lightTheme: false,
+    maxTerminals: 4,
   };
 
   function createFitAddon() {
@@ -200,6 +201,29 @@
     const anyConnected = [...state.panes.values()].some((pane) => pane.connected);
     badge.textContent = anyConnected ? "connected" : "disconnected";
     badge.className = `badge ${anyConnected ? "connected" : "disconnected"}`;
+    updatePaneLimit();
+  }
+
+  function updatePaneLimit() {
+    const el = document.getElementById("pane-limit");
+    if (!el) return;
+
+    const count = state.panes.size;
+    const max = state.maxTerminals;
+    const atLimit = count >= max;
+
+    el.textContent = atLimit
+      ? `Terminals ${count}/${max} · limit reached`
+      : `Terminals ${count}/${max}`;
+    el.classList.toggle("at-limit", atLimit);
+    el.title = atLimit
+      ? `Maximum ${max} concurrent terminals. Increase in Settings (Max terminals) and restart, or run: pyttyd config set max_terminals N`
+      : `Concurrent terminal sessions: ${count} of ${max} maximum`;
+
+    ["btn-new", "btn-split-h", "btn-split-v"].forEach((id) => {
+      const btn = document.getElementById(id);
+      if (btn) btn.disabled = atLimit;
+    });
   }
 
   function createPaneNode(id) {
@@ -211,6 +235,10 @@
     return node;
   }
 
+  function canOpenPane() {
+    return state.panes.size < state.maxTerminals;
+  }
+
   function mountPane(container) {
     state.paneCounter += 1;
     const id = state.paneCounter;
@@ -219,10 +247,12 @@
     state.panes.set(id, pane);
     setActivePane(id);
     pane.fit();
+    updatePaneLimit();
     return pane;
   }
 
   function addPane(targetContainer) {
+    if (!canOpenPane()) return null;
     const node = createPaneNode();
     targetContainer.appendChild(node);
     return mountPane(node);
@@ -231,6 +261,7 @@
   function splitActive(direction) {
     const active = resolveActivePane();
     if (!active) return;
+    if (!canOpenPane()) return;
 
     const keepActiveId = active.id;
     const leaf = active.container;
@@ -287,6 +318,7 @@
       setActivePane(remaining[remaining.length - 1]);
     }
     resizeAll();
+    updatePaneLimit();
   }
 
   function collapseLayout(root) {
@@ -333,6 +365,13 @@
     }
     const user = await me.json();
     document.getElementById("username-label").textContent = user.username;
+
+    const cfgRes = await fetch("/api/config");
+    if (cfgRes.ok) {
+      const cfg = await cfgRes.json();
+      state.maxTerminals = cfg.max_terminals || 4;
+      updatePaneLimit();
+    }
 
     const workspace = document.getElementById("workspace");
     workspace.className = "workspace pane-root";
@@ -434,9 +473,13 @@
         message.hidden = false;
         return;
       }
-      message.textContent = "Saved. Click Restart to apply host/port changes.";
+      message.textContent = "Saved. Click Restart to apply host/port/max terminals changes.";
       message.className = "form-message success";
       message.hidden = false;
+      if (payload.max_terminals) {
+        state.maxTerminals = Number(payload.max_terminals);
+        updatePaneLimit();
+      }
     });
   }
 
