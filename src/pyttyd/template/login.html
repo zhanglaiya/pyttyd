@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }} — Login</title>
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body class="auth-page">
+  <div class="auth-bg"></div>
+  <main class="auth-card">
+    <div class="brand">
+      <div class="brand-icon">▸_</div>
+      <div>
+        <h1>{{ title }}</h1>
+        <p>Web Terminal</p>
+      </div>
+    </div>
+    <form id="login-form" class="auth-form">
+      <label>
+        <span>Username</span>
+        <input type="text" name="username" autocomplete="username" required autofocus>
+      </label>
+      <label>
+        <span>Password</span>
+        <input type="password" name="password" autocomplete="current-password" required>
+      </label>
+      <p id="login-error" class="form-error" hidden></p>
+      <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+    </form>
+    <p class="auth-foot">Secure your credentials. Terminal access is powerful.</p>
+  </main>
+  <script src="/static/js/login.js"></script>
+</body>
+</html>

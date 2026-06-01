@@ -1,0 +1,18 @@
+services:
+  pyttyd:
+    build: .
+    container_name: pyttyd
+    restart: unless-stopped
+    ports:
+      - "${PYTTYD_PORT:-8221}:8221"
+    environment:
+      PYTTYD_CONFIG: /data/config.json
+    volumes:
+      - pyttyd-data:/data
+      # Optional: mount host home for shell access
+      # - ${HOME}:${HOME}
+    # Uncomment to run as your host user (recommended when mounting $HOME)
+    # user: "${UID:-1000}:${GID:-1000}"
+
+volumes:
+  pyttyd-data:

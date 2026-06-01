@@ -1,16 +1,9 @@
-import socket
-import uvicorn
+from pyttyd.cli import entrypoint
 
 
-try:
-    host = socket.gethostbyname(socket.gethostname())
-except:
-    host = '127.0.0.1'
+def main() -> None:
+    entrypoint()
 
 
-def main():
-    uvicorn.run(
-        'pyttyd.app:app',
-        host=host,
-        port=8221
-    )
+if __name__ == "__main__":
+    main()

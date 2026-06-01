@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="/static/css/xterm.css?v={{ version }}">
+  <link rel="stylesheet" href="/static/css/app.css?v={{ version }}">
+</head>
+<body class="terminal-page">
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="brand-mini">▸_</span>
+      <span class="app-title">{{ title }}</span>
+      <span class="badge" id="conn-status">connecting</span>
+    </div>
+    <div class="topbar-right">
+      <span class="user-label" id="username-label"></span>
+      <button type="button" class="btn btn-ghost" id="btn-settings" title="Settings">⚙ Settings</button>
+      <button type="button" class="btn btn-ghost" id="btn-logout" title="Logout">Logout</button>
+    </div>
+  </header>
+
+  <div class="toolbar" id="toolbar">
+    <div class="toolbar-group">
+      <button type="button" class="tool-btn" id="btn-new" title="New terminal">＋ New</button>
+      <button type="button" class="tool-btn" id="btn-split-h" title="Split horizontal">⬍ Split H</button>
+      <button type="button" class="tool-btn" id="btn-split-v" title="Split vertical">⬌ Split V</button>
+      <button type="button" class="tool-btn" id="btn-close-pane" title="Close pane">✕ Close</button>
+    </div>
+    <div class="toolbar-group">
+      <button type="button" class="tool-btn" id="btn-clear" title="Clear screen">⌫ Clear</button>
+      <button type="button" class="tool-btn" id="btn-copy" title="Copy selection">⎘ Copy</button>
+      <button type="button" class="tool-btn" id="btn-paste" title="Paste">📋 Paste</button>
+      <button type="button" class="tool-btn" id="btn-reconnect" title="Reconnect">↻ Reconnect</button>
+    </div>
+    <div class="toolbar-group toolbar-group-right">
+      <label class="font-control">
+        Font
+        <input type="range" id="font-size" min="10" max="24" value="14">
+      </label>
+      <button type="button" class="tool-btn" id="btn-theme" title="Toggle theme">◐ Theme</button>
+    </div>
+  </div>
+
+  <main id="workspace" class="workspace"></main>
+
+  <dialog id="settings-dialog" class="modal">
+    <form method="dialog" class="modal-content" id="settings-form">
+      <header class="modal-header">
+        <h2>Settings</h2>
+        <button type="button" class="btn btn-ghost modal-close" id="settings-close">✕</button>
+      </header>
+      <div class="modal-body">
+        <div class="form-grid">
+          <label><span>Title</span><input name="title" type="text"></label>
+          <label><span>Host</span><input name="host" type="text"></label>
+          <label><span>Port</span><input name="port" type="number" min="1" max="65535"></label>
+          <label><span>Username</span><input name="username" type="text"></label>
+          <label><span>New password</span><input name="password" type="password" placeholder="Leave blank to keep"></label>
+          <label><span>Shell</span><input name="shell" type="text"></label>
+          <label><span>Working directory</span><input name="cwd" type="text"></label>
+          <label><span>Max terminals</span><input name="max_terminals" type="number" min="1" max="16"></label>
+        </div>
+        <p id="settings-message" class="form-message" hidden></p>
+      </div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-ghost" id="btn-restart">↻ Restart server</button>
+        <button type="submit" class="btn btn-primary">Save changes</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <script src="/static/js/xterm.js?v={{ version }}"></script>
+  <script src="/static/js/xterm-addon-fit.js?v={{ version }}"></script>
+  <script src="/static/js/app.js?v={{ version }}"></script>
+</body>
+</html>

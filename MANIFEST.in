@@ -1,5 +1,6 @@
 include LICENSE
 include README.md
+include README.zh-CN.md
 
 recursive-include src/pyttyd/static *
 recursive-include src/pyttyd/template *
