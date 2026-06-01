@@ -140,8 +140,9 @@ async def update_config(request: Request, payload: ConfigUpdateRequest):
     cfg.apply_updates(updates)
     if password:
         from pyttyd.auth import hash_password
+        from pyttyd.config import set_password
 
-        cfg.password_hash = hash_password(password)
+        set_password(cfg, password)
     save_config(cfg)
     return {"ok": True, "config": cfg.public_dict(), "restart_required": True}
 

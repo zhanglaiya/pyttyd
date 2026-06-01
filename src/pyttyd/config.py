@@ -31,6 +31,7 @@ class Config:
     host: str = "0.0.0.0"
     port: int = 8221
     username: str = "admin"
+    password: str = ""
     password_hash: str = ""
     shell: str = field(default_factory=lambda: os.environ.get("SHELL", "/bin/bash"))
     cwd: Optional[str] = None
@@ -45,6 +46,7 @@ class Config:
         if not include_secrets:
             data.pop("password_hash", None)
             data.pop("secret_key", None)
+            data.pop("password", None)
         return data
 
     def public_dict(self) -> Dict[str, Any]:
@@ -152,6 +154,7 @@ def init_config(
         host=host or "0.0.0.0",
         port=port or 8221,
         username=user,
+        password=plain_password,
         password_hash=hash_password(plain_password),
         shell=os.environ.get("SHELL", "/bin/bash"),
         cwd=None,
@@ -165,10 +168,17 @@ def init_config(
     return cfg, user, plain_password
 
 
-def mask_config(cfg: Config) -> Dict[str, Any]:
+def show_config(cfg: Config) -> Dict[str, Any]:
     data = cfg.to_dict(include_secrets=False)
     data["config_path"] = str(_config_path)
     data["listen"] = f"http://{cfg.host}:{cfg.port}"
     data["shell"] = cfg.shell
     data["cwd"] = cfg.cwd or str(Path.home())
+    data["username"] = cfg.username
+    data["password"] = cfg.password or "(not set)"
     return data
+
+
+def set_password(cfg: Config, plain_password: str) -> None:
+    cfg.password = plain_password
+    cfg.password_hash = hash_password(plain_password)

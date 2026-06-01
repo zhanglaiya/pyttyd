@@ -12,15 +12,15 @@ from typing import Optional
 import typer
 
 from pyttyd import __version__
-from pyttyd.auth import hash_password
 from pyttyd.config import (
     config_path,
     get_config,
     init_config,
     load_config,
-    mask_config,
     save_config,
     set_config_path,
+    set_password,
+    show_config,
 )
 
 app = typer.Typer(
@@ -153,7 +153,7 @@ def init_cmd(
     typer.echo(f"  Username    : {user}")
     typer.echo(f"  Password    : {plain_password}")
     typer.echo()
-    typer.secho("Save these credentials — the password cannot be recovered.", fg=typer.colors.YELLOW)
+    typer.secho("View credentials anytime with: pyttyd config show", fg=typer.colors.YELLOW)
     typer.echo("Start the server with: pyttyd")
     typer.echo("Run in background:     pyttyd start")
 
@@ -173,7 +173,7 @@ def config_show(
     if config:
         set_config_path(config)
     cfg = load_config()
-    data = mask_config(cfg)
+    data = show_config(cfg)
     if json_output:
         typer.echo(json.dumps(data, indent=2, ensure_ascii=False))
         return
@@ -198,7 +198,7 @@ def config_set(
         set_config_path(config)
     cfg = load_config()
     if key == "password":
-        cfg.password_hash = hash_password(value)
+        set_password(cfg, value)
     else:
         cfg.apply_updates({key: value})
     save_config(cfg)
@@ -233,10 +233,12 @@ def config_reset_password(
         set_config_path(config)
     cfg = load_config()
     plain = password or secrets.token_urlsafe(12)
-    cfg.password_hash = hash_password(plain)
+    set_password(cfg, plain)
     save_config(cfg)
     typer.secho("Password updated.", fg=typer.colors.GREEN)
-    typer.echo(f"New password: {plain}")
+    typer.echo(f"  Username : {cfg.username}")
+    typer.echo(f"  Password : {plain}")
+    typer.echo("  Run `pyttyd config show` to view credentials later.")
 
 
 def entrypoint() -> None:
