@@ -40,13 +40,28 @@ Password    : xxxxx
 
 Open `http://<host>:8221` in your browser and sign in.
 
+```bash
+# foreground (Ctrl+C to stop)
+pyttyd
+
+# background
+pyttyd start
+pyttyd status
+pyttyd stop
+```
+
+Logs: `~/.config/pyttyd/pyttyd.log`
+
 > Pyttyd is meant to run on the **host OS** (pip install or `pip install -e .`). It shares the machine's real shell, home directory, and environment — not an isolated container.
 
 ## CLI
 
 | Command | Description |
 |---------|-------------|
-| `pyttyd` | Start the web terminal server |
+| `pyttyd` | Start the web terminal server (foreground) |
+| `pyttyd start` | Start in background |
+| `pyttyd stop` | Stop background process |
+| `pyttyd status` | Show background process status |
 | `pyttyd init` | Initialize config with random username/password |
 | `pyttyd init --username admin --password secret` | Set credentials explicitly |
 | `pyttyd config show` | Show current configuration |

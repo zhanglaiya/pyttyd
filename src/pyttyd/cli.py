@@ -65,6 +65,62 @@ def main(
         run_server()
 
 
+@app.command("start")
+def start_cmd(
+    config: Optional[Path] = typer.Option(None, "--config", help="Config file path.", envvar="PYTTYD_CONFIG"),
+) -> None:
+    """Start pyttyd in the background."""
+    if config:
+        set_config_path(config)
+        load_config(config)
+    _ensure_initialized()
+
+    from pyttyd.daemon import log_file, pid_file, start_background
+
+    pid = start_background()
+    cfg = get_config()
+    typer.secho(f"Pyttyd started in background (pid {pid})", fg=typer.colors.GREEN)
+    typer.echo(f"  Listen : http://{cfg.host}:{cfg.port}")
+    typer.echo(f"  PID    : {pid_file()}")
+    typer.echo(f"  Log    : {log_file()}")
+
+
+@app.command("stop")
+def stop_cmd(
+    config: Optional[Path] = typer.Option(None, "--config", help="Config file path.", envvar="PYTTYD_CONFIG"),
+) -> None:
+    """Stop the background pyttyd process."""
+    if config:
+        set_config_path(config)
+    from pyttyd.daemon import stop_background
+
+    if stop_background():
+        typer.secho("Pyttyd stopped.", fg=typer.colors.GREEN)
+    else:
+        typer.secho("Pyttyd is not running.", fg=typer.colors.YELLOW)
+
+
+@app.command("status")
+def status_cmd(
+    config: Optional[Path] = typer.Option(None, "--config", help="Config file path.", envvar="PYTTYD_CONFIG"),
+) -> None:
+    """Show whether pyttyd is running in the background."""
+    if config:
+        set_config_path(config)
+        load_config(config)
+    from pyttyd.daemon import log_file, pid_file, status_background
+
+    state, pid = status_background()
+    if state == "running":
+        cfg = get_config()
+        typer.secho(f"running (pid {pid})", fg=typer.colors.GREEN)
+        typer.echo(f"  Listen : http://{cfg.host}:{cfg.port}")
+    else:
+        typer.echo("stopped")
+    typer.echo(f"  PID file : {pid_file()}")
+    typer.echo(f"  Log file : {log_file()}")
+
+
 @app.command("init")
 def init_cmd(
     config: Optional[Path] = typer.Option(None, "--config", help="Config file path."),
@@ -99,6 +155,7 @@ def init_cmd(
     typer.echo()
     typer.secho("Save these credentials — the password cannot be recovered.", fg=typer.colors.YELLOW)
     typer.echo("Start the server with: pyttyd")
+    typer.echo("Run in background:     pyttyd start")
 
 
 @app.command("version")

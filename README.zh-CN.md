@@ -40,13 +40,28 @@ Password    : xxxxx
 
 浏览器访问 `http://<host>:8221` 登录即可。
 
+```bash
+# 前台运行（Ctrl+C 停止）
+pyttyd
+
+# 后台运行
+pyttyd start
+pyttyd status
+pyttyd stop
+```
+
+日志：`~/.config/pyttyd/pyttyd.log`
+
 > Pyttyd 设计为在**宿主机**上直接运行（pip 安装或源码安装），共享本机真实的 Shell、主目录与环境，而非隔离的容器环境。
 
 ## 命令行
 
 | 命令 | 说明 |
 |------|------|
-| `pyttyd` | 启动 Web 终端服务 |
+| `pyttyd` | 启动 Web 终端服务（前台） |
+| `pyttyd start` | 后台启动 |
+| `pyttyd stop` | 停止后台进程 |
+| `pyttyd status` | 查看后台运行状态 |
 | `pyttyd init` | 初始化配置，生成随机用户名/密码 |
 | `pyttyd init --username admin --password secret` | 指定账号密码 |
 | `pyttyd config show` | 查看当前配置 |
