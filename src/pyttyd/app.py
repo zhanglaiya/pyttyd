@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from __future__ import annotations
-
 import asyncio
 from typing import Any
 
@@ -13,10 +11,11 @@ from pydantic import BaseModel, Field
 from pyttyd import __static__, __version__, read_template
 from pyttyd.auth import (
     SESSION_COOKIE,
+    authenticate,
     create_session_token,
     get_session_user,
     require_user,
-    verify_password,
+    _cookie_secure,
 )
 from pyttyd.config import get_config, load_config, save_config
 from pyttyd.pty import PTY
@@ -88,29 +87,31 @@ async def setup_page():
 
 
 @app.post("/api/login")
-async def login(payload: LoginRequest):
+async def login(payload: LoginRequest, request: Request):
     cfg = _cfg()
     if not cfg.initialized:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Not initialized")
-    if payload.username != cfg.username or not verify_password(payload.password, cfg.password_hash):
+    if not authenticate(cfg, payload.username, payload.password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
     token = create_session_token(payload.username, cfg.secret_key)
     response = JSONResponse({"ok": True, "username": payload.username})
+    secure = _cookie_secure(request)
     response.set_cookie(
         SESSION_COOKIE,
         token,
         httponly=True,
         samesite="lax",
+        secure=secure,
         max_age=60 * 60 * 24 * 7,
     )
     return response
 
 
 @app.post("/api/logout")
-async def logout():
+async def logout(request: Request):
     response = JSONResponse({"ok": True})
-    response.delete_cookie(SESSION_COOKIE)
+    response.delete_cookie(SESSION_COOKIE, secure=_cookie_secure(request))
     return response
 
 

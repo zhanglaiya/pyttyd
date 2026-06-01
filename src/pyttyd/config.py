@@ -111,14 +111,21 @@ def load_config(path: Optional[Path] = None) -> Config:
         raw = json.load(fh)
 
     _config = Config(**{k: v for k, v in raw.items() if k in Config.__dataclass_fields__})
+    _normalize_config(_config)
     return _config
+
+
+def _normalize_config(cfg: Config) -> None:
+    cfg.username = (cfg.username or "").strip()
+    if cfg.password is None:
+        cfg.password = ""
+    else:
+        cfg.password = str(cfg.password).strip()
 
 
 def get_config() -> Config:
-    global _config
-    if _config is None:
-        return load_config()
-    return _config
+    """Load the latest config from disk (safe after CLI edits without restart)."""
+    return load_config()
 
 
 def save_config(config: Optional[Config] = None, path: Optional[Path] = None) -> Path:
@@ -175,10 +182,25 @@ def show_config(cfg: Config) -> Dict[str, Any]:
     data["shell"] = cfg.shell
     data["cwd"] = cfg.cwd or str(Path.home())
     data["username"] = cfg.username
-    data["password"] = cfg.password or "(not set)"
+    if cfg.password:
+        data["password"] = cfg.password
+    elif cfg.password_hash:
+        data["password"] = "(not stored — run: pyttyd config reset-password)"
+    else:
+        data["password"] = "(not set)"
     return data
 
 
 def set_password(cfg: Config, plain_password: str) -> None:
+    plain_password = plain_password.strip()
     cfg.password = plain_password
     cfg.password_hash = hash_password(plain_password)
+
+
+def repair_credentials(cfg: Config) -> bool:
+    """Re-sync password_hash (and trim username) from stored plain password."""
+    _normalize_config(cfg)
+    if not cfg.password:
+        return False
+    set_password(cfg, cfg.password)
+    return True

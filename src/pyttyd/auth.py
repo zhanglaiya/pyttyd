@@ -8,9 +8,12 @@ import hmac
 import json
 import secrets
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, TYPE_CHECKING
 
 from fastapi import HTTPException, Request, status
+
+if TYPE_CHECKING:
+    from pyttyd.config import Config
 
 SESSION_COOKIE = "pyttyd_session"
 SESSION_TTL = 60 * 60 * 24 * 7  # 7 days
@@ -38,6 +41,29 @@ def verify_password(password: str, stored: str) -> bool:
         return hmac.compare_digest(actual, expected)
     except (ValueError, TypeError):
         return False
+
+
+def authenticate(cfg: "Config", username: str, password: str) -> bool:
+    username = username.strip()
+    password = password.strip()
+    expected_user = (cfg.username or "").strip()
+    if username != expected_user:
+        return False
+    if cfg.password_hash and verify_password(password, cfg.password_hash):
+        return True
+    stored = (cfg.password or "").strip()
+    if stored and hmac.compare_digest(password, stored):
+        from pyttyd.config import save_config, set_password
+
+        set_password(cfg, password)
+        save_config(cfg)
+        return True
+    return False
+
+
+def _cookie_secure(request: Request) -> bool:
+    proto = request.headers.get("x-forwarded-proto", request.url.scheme)
+    return proto == "https"
 
 
 def _sign(payload: bytes, secret: str) -> str:

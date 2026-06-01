@@ -48,22 +48,67 @@ def read_pid() -> int | None:
     return pid
 
 
-def start_background() -> int:
+def pids_on_port(port: int) -> list[int]:
+    try:
+        out = subprocess.check_output(
+            ["lsof", "-ti", f":{port}"],
+            stderr=subprocess.DEVNULL,
+            text=True,
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return []
+    pids: list[int] = []
+    for token in out.split():
+        token = token.strip()
+        if token.isdigit():
+            pids.append(int(token))
+    return pids
+
+
+def clear_port(port: int) -> list[int]:
+    killed: list[int] = []
+    for pid in pids_on_port(port):
+        try:
+            os.kill(pid, signal.SIGTERM)
+            killed.append(pid)
+        except ProcessLookupError:
+            continue
+    if killed:
+        time.sleep(0.5)
+        for pid in pids_on_port(port):
+            try:
+                os.kill(pid, signal.SIGKILL)
+            except ProcessLookupError:
+                continue
+    return killed
+
+
+def process_cmdline(pid: int) -> str:
+    proc_path = Path(f"/proc/{pid}/cmdline")
+    if not proc_path.exists():
+        return ""
+    raw = proc_path.read_bytes().replace(b"\x00", b" ").decode("utf-8", errors="replace")
+    return raw.strip()
+
+
+def start_background(*, force: bool = False) -> int:
     existing = read_pid()
-    if existing is not None:
+    if existing is not None and not force:
         return existing
+    if existing is not None and force:
+        stop_background()
 
     runtime = _runtime_dir()
     runtime.mkdir(parents=True, exist_ok=True)
 
-    cmd = [sys.executable, "-m", "pyttyd"]
-    cfg_env = os.environ.get("PYTTYD_CONFIG")
-    if cfg_env:
-        cmd.extend(["--config", cfg_env])
+    cfg = str(config_path())
+    cmd = [sys.executable, "-m", "pyttyd", "--config", cfg]
+    env = os.environ.copy()
+    env["PYTTYD_CONFIG"] = cfg
 
     log_path = log_file()
     with log_path.open("a", encoding="utf-8") as log:
-        log.write(f"\n--- start {time.strftime('%Y-%m-%d %H:%M:%S')} ---\n")
+        log.write(f"\n--- start {time.strftime('%Y-%m-%d %H:%M:%S')} config={cfg} ---\n")
         log.flush()
         proc = subprocess.Popen(
             cmd,
@@ -71,7 +116,7 @@ def start_background() -> int:
             stdout=log,
             stderr=subprocess.STDOUT,
             start_new_session=True,
-            env=os.environ.copy(),
+            env=env,
         )
 
     pid_file().write_text(str(proc.pid), encoding="utf-8")
@@ -95,9 +140,15 @@ def stop_background() -> bool:
     return True
 
 
+def restart_background() -> int:
+    cfg = get_config()
+    stop_background()
+    clear_port(cfg.port)
+    return start_background(force=True)
+
+
 def status_background() -> tuple[str, int | None]:
     pid = read_pid()
     if pid is None:
         return "stopped", None
-    cfg = get_config()
     return "running", pid
