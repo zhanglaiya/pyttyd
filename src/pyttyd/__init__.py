@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-__version__ = "2.0.0"
+__version__ = "2.0.1"
 
 __basepath__ = os.path.dirname(os.path.abspath(__file__))
 __static__ = os.path.join(__basepath__, "static")
